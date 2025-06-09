@@ -3,25 +3,28 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 import MCIcon from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-export default function Carnaval({ navigation }) {
+export default function Carnaval({ route, navigation }) {
+  const { id, nome, data } = route.params || {}; // dados da pesquisa selecionada
+
   return (
     <View style={styles.container}>
-      {/* Cabeçalho personalizado */}
+      {/* Cabeçalho com botão voltar e nome da pesquisa */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.voltar}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.titulo}>Carnaval</Text>
+        <Text style={styles.titulo}>{nome || 'Carnaval'}</Text>
       </View>
 
-      {/* Conteúdo central com botões */}
+      {/* Botões centrais */}
       <View style={styles.content}>
         <TouchableOpacity
           style={styles.botaoQuadrado}
           onPress={() =>
             navigation.navigate('ModificarPesquisa', {
-              nome: 'Carnaval 2024',
-              data: '16/02/2024',
+              id: id,
+              nome: nome,
+              data: data
             })
           }
         >

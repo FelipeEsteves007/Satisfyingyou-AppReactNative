@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../src/firebase/config';
 
 export default function ModificarPesquisa({ route, navigation }) {
-  const { nome, data } = route.params || {};
+  const { id, nome, data } = route.params || {};
 
   const [novoNome, setNovoNome] = useState('');
   const [novaData, setNovaData] = useState('');
@@ -33,19 +42,41 @@ export default function ModificarPesquisa({ route, navigation }) {
       setErroData('');
     }
 
-    if (valido) {
-      navigation.navigate('Drawer');
-    }
+    if (!valido) return;
+
+    const pesquisaRef = doc(db, 'pesquisas', id);
+
+    updateDoc(pesquisaRef, {
+      titulo: novoNome,
+      data: novaData,
+    })
+      .then(() => {
+        Alert.alert('Sucesso', 'Pesquisa atualizada com sucesso!');
+        navigation.navigate('Drawer', { screen: 'Home' });
+      })
+      .catch((error) => {
+        console.log('Erro ao atualizar:', error);
+        Alert.alert('Erro', 'Não foi possível atualizar.');
+      });
   };
 
   const excluirPesquisa = () => {
-    setModalVisivel(false);
-    navigation.navigate('Drawer', { screen: 'Home' });
+    const ref = doc(db, 'pesquisas', id);
+
+    deleteDoc(ref)
+      .then(() => {
+        Alert.alert('Sucesso', 'Pesquisa excluída com sucesso!');
+        setModalVisivel(false);
+        navigation.navigate('Drawer', { screen: 'Home' });
+      })
+      .catch((error) => {
+        console.log('Erro ao excluir:', error);
+        Alert.alert('Erro', 'Não foi possível excluir.');
+      });
   };
 
   const cancelarExclusao = () => {
     setModalVisivel(false);
-    navigation.navigate('Drawer', { screen: 'Carnaval' });
   };
 
   return (
@@ -82,13 +113,11 @@ export default function ModificarPesquisa({ route, navigation }) {
         <Text style={styles.textoBotao}>SALVAR</Text>
       </TouchableOpacity>
 
-      {/* Botão Apagar */}
       <TouchableOpacity style={styles.botaoLixeira} onPress={() => setModalVisivel(true)}>
         <Icon name="delete" size={24} color="white" />
         <Text style={styles.textoLixeira}>Apagar</Text>
       </TouchableOpacity>
 
-      {/* Modal personalizado */}
       {modalVisivel && (
         <View style={styles.modalFundo}>
           <View style={styles.modalCaixa}>

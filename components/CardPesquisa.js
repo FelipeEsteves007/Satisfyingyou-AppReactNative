@@ -15,12 +15,13 @@ const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
     backgroundColor: 'white',
-    padding: 20,
+    padding: 10,
     borderRadius: 10,
     width: 100,
+    height: 130
   },
   icon: {
-    width: 60,
+    width: 50,
     height: 60,
   },
   titulo: {

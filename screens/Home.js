@@ -1,14 +1,56 @@
-import React, { useState } from 'react';
-import { View,Text,TextInput,TouchableOpacity,StyleSheet,Image,} from 'react-native';
-import CardPesquisa from '../components/CardPesquisa'; 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  FlatList,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import CardPesquisa from '../components/CardPesquisa';
+import { db } from '../src/firebase/config';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 export default function Home({ navigation }) {
   const [termo, setTermo] = useState('');
+  const [pesquisas, setPesquisas] = useState([]);
+
+  // 🔄 Escuta em tempo real as pesquisas cadastradas
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'pesquisas'), (snapshot) => {
+      const dados = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPesquisas(dados);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const renderItem = ({ item }) => {
+    if (!item.titulo?.toLowerCase().includes(termo.toLowerCase())) return null;
+
+    return (
+      <CardPesquisa
+        imagem={require('../assets/emojis/pc.png')} // ou use item.imagemUrl se tiver imagem personalizada
+        nome={item.titulo}
+        data={item.dataPesquisa}
+        onPress={() =>
+          navigation.navigate('Carnaval', {
+            id: item.id,
+            nome: item.titulo,
+            data: item.dataPesquisa,
+          })
+        }
+      />
+    );
+  };
 
   return (
     <View style={styles.container}>
-      {/* Barra de busca com ícone */}
+      {/* 🔍 Barra de busca */}
       <View style={styles.searchBar}>
         <Icon name="search" size={30} color="gray" />
         <TextInput
@@ -20,44 +62,21 @@ export default function Home({ navigation }) {
         />
       </View>
 
-      {/* Cards com pesquisas */}
-      <View style={styles.iconsContainer}>
-        <CardPesquisa
-          imagem={require('../assets/emojis/pc.png')}
-          nome="SECOMP 2023"
-          data="10/10/2023"
-          onPress={() =>
-            navigation.navigate('Carnaval', {
-              nome: 'SECOMP 2023',
-              data: '10/10/2023',
-            })
-          }
-        />
-        <CardPesquisa
-          imagem={require('../assets/emojis/group.png')}
-          nome="UBUNTU 2022"
-          data="05/06/2022"
-          onPress={() =>
-            navigation.navigate('Carnaval', {
-              nome: 'UBUNTU 2022',
-              data: '05/06/2022',
-            })
-          }
-        />
-        <CardPesquisa
-          imagem={require('../assets/emojis/woman.png')}
-          nome="MENINAS CPU"
-          data="01/04/2022"
-          onPress={() =>
-            navigation.navigate('Carnaval', {
-              nome: 'MENINAS CPU',
-              data: '01/04/2022',
-            })
-          }
-        />
-      </View>
+      {/* 📋 Lista horizontal de pesquisas */}
+      <FlatList
+        data={pesquisas}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        horizontal
+        contentContainerStyle={styles.iconsContainer}
+        ListEmptyComponent={
+          <Text style={{ color: 'white', marginTop: 20 }}>
+            Nenhuma pesquisa cadastrada ainda.
+          </Text>
+        }
+      />
 
-      {/* Botão nova pesquisa */}
+      {/* ➕ Botão de nova pesquisa */}
       <TouchableOpacity
         style={styles.novaPesquisaButton}
         onPress={() => navigation.navigate('NovaPesquisa')}
@@ -84,11 +103,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     height: 50,
   },
-  searchIcon: {
-    width: 25,
-    height: 25,
-    marginRight: 10,
-  },
   searchInput: {
     flex: 1,
     fontSize: 16,
@@ -96,9 +110,9 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   iconsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 30,
+    gap: 20,
+    marginBottom: 20,
+    paddingRight: 20,
   },
   novaPesquisaButton: {
     backgroundColor: '#37BD6D',
