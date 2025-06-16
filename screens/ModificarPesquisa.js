@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity,StyleSheet, Alert, Image} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../src/firebase/config';
+import { launchImageLibrary } from 'react-native-image-picker';
+import ImageResizer from 'react-native-image-resizer';
 
 export default function ModificarPesquisa({ route, navigation }) {
-  const { id, nome, data } = route.params || {};
+  const { id, nome, data, imagemUrl } = route.params || {};
 
   const [novoNome, setNovoNome] = useState('');
   const [novaData, setNovaData] = useState('');
+  const [novaImagemBase64, setNovaImagemBase64] = useState(imagemUrl || '');
   const [erroNome, setErroNome] = useState('');
   const [erroData, setErroData] = useState('');
   const [modalVisivel, setModalVisivel] = useState(false);
@@ -25,16 +21,35 @@ export default function ModificarPesquisa({ route, navigation }) {
     setNovaData(data || '');
   }, [nome, data]);
 
+  const escolherImagem = () => {
+    launchImageLibrary(
+      { mediaType: 'photo', includeBase64: true },
+      async (response) => {
+        if (!response.didCancel && response.assets && response.assets[0]) {
+          const img = response.assets[0];
+          const resized = await ImageResizer.createResizedImage(
+            img.uri,
+            300,
+            300,
+            'JPEG',
+            80
+          );
+
+          const base64 = `data:image/jpeg;base64,${img.base64}`;
+          setNovaImagemBase64(base64);
+        }
+      }
+    );
+  };
+
   const validar = () => {
     let valido = true;
-
     if (novoNome.trim() === '') {
       setErroNome('Preencha o nome da pesquisa');
       valido = false;
     } else {
       setErroNome('');
     }
-
     if (novaData.trim() === '') {
       setErroData('Preencha a data');
       valido = false;
@@ -45,13 +60,13 @@ export default function ModificarPesquisa({ route, navigation }) {
     if (!valido) return;
 
     const pesquisaRef = doc(db, 'pesquisas', id);
-
     updateDoc(pesquisaRef, {
       titulo: novoNome,
       data: novaData,
+      imagemUrl: novaImagemBase64,
     })
       .then(() => {
-        Alert.alert('Sucesso', 'Pesquisa atualizada com sucesso!');
+        Alert.alert('Sucesso', 'Pesquisa atualizada!');
         navigation.navigate('Drawer', { screen: 'Home' });
       })
       .catch((error) => {
@@ -62,10 +77,9 @@ export default function ModificarPesquisa({ route, navigation }) {
 
   const excluirPesquisa = () => {
     const ref = doc(db, 'pesquisas', id);
-
     deleteDoc(ref)
       .then(() => {
-        Alert.alert('Sucesso', 'Pesquisa excluída com sucesso!');
+        Alert.alert('Sucesso', 'Pesquisa excluída!');
         setModalVisivel(false);
         navigation.navigate('Drawer', { screen: 'Home' });
       })
@@ -73,10 +87,6 @@ export default function ModificarPesquisa({ route, navigation }) {
         console.log('Erro ao excluir:', error);
         Alert.alert('Erro', 'Não foi possível excluir.');
       });
-  };
-
-  const cancelarExclusao = () => {
-    setModalVisivel(false);
   };
 
   return (
@@ -105,9 +115,16 @@ export default function ModificarPesquisa({ route, navigation }) {
       {erroData !== '' && <Text style={styles.erro}>{erroData}</Text>}
 
       <Text style={styles.label}>Imagem</Text>
-      <View style={styles.boxImagem}>
-        <Icon name="celebration" size={40} color="#C57ED3" />
-      </View>
+      <TouchableOpacity style={styles.boxImagem} onPress={escolherImagem}>
+        {novaImagemBase64 ? (
+          <Image
+            source={{ uri: novaImagemBase64 }}
+            style={{ width: 80, height: 80, borderRadius: 4 }}
+          />
+        ) : (
+          <Icon name="add-photo-alternate" size={40} color="#C57ED3" />
+        )}
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.botaoVerde} onPress={validar}>
         <Text style={styles.textoBotao}>SALVAR</Text>
@@ -126,7 +143,7 @@ export default function ModificarPesquisa({ route, navigation }) {
               <TouchableOpacity style={styles.botaoSim} onPress={excluirPesquisa}>
                 <Text style={styles.modalTextoBotao}>SIM</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.botaoCancelar} onPress={cancelarExclusao}>
+              <TouchableOpacity style={styles.botaoCancelar} onPress={() => setModalVisivel(false)}>
                 <Text style={styles.modalTextoBotao}>CANCELAR</Text>
               </TouchableOpacity>
             </View>
@@ -138,18 +155,9 @@ export default function ModificarPesquisa({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#402477',
-    padding: 20,
-    paddingTop: 50,
-  },
-  label: {
-    color: 'white',
-    fontSize: 16,
-    fontFamily: 'AveriaLibre-Regular',
-    marginTop: 20,
-  },
+  // mesmo CSS anterior...
+  container: { flex: 1, backgroundColor: '#402477', padding: 20, paddingTop: 50 },
+  label: { color: 'white', fontSize: 16, fontFamily: 'AveriaLibre-Regular', marginTop: 20 },
   input: {
     backgroundColor: 'white',
     borderRadius: 4,
@@ -169,18 +177,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
     paddingHorizontal: 10,
   },
-  inputInterno: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: 'AveriaLibre-Regular',
-    color: '#3F92C5',
-  },
-  erro: {
-    color: '#FD7979',
-    fontSize: 14,
-    fontFamily: 'AveriaLibre-Regular',
-    marginTop: 5,
-  },
+  inputInterno: { flex: 1, fontSize: 16, fontFamily: 'AveriaLibre-Regular', color: '#3F92C5' },
+  erro: { color: '#FD7979', fontSize: 14, fontFamily: 'AveriaLibre-Regular', marginTop: 5 },
   boxImagem: {
     backgroundColor: 'white',
     height: 90,

@@ -1,21 +1,47 @@
 import React, { useState } from 'react';
-import {
-  SafeAreaView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  StyleSheet,
-} from 'react-native';
+import {SafeAreaView,Text,TextInput,TouchableOpacity,Alert,StyleSheet,} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { collection, addDoc } from 'firebase/firestore';
 import { auth, db } from '../src/firebase/config';
+import { launchImageLibrary } from 'react-native-image-picker';
+import ImageResizer from 'react-native-image-resizer';
 
 export default function NovaPesquisa({ navigation }) {
   const [nome, setNome] = useState('');
   const [data, setData] = useState('');
   const [erroNome, setErroNome] = useState('');
   const [erroData, setErroData] = useState('');
+  const [imagemBase64, setImagemBase64] = useState('');
+
+  const selecionarImagem = () => {
+    launchImageLibrary({ mediaType: 'photo' }, async (result) => {
+      if (!result.didCancel && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+
+        try {
+          const resizedImage = await ImageResizer.createResizedImage(
+            uri,
+            100,
+            100,
+            'JPEG',
+            100
+          );
+
+          const response = await fetch(resizedImage.uri);
+          const blob = await response.blob();
+
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setImagemBase64(reader.result); // ✅ Base64 salvo
+          };
+          reader.readAsDataURL(blob);
+        } catch (error) {
+          console.error('Erro ao processar imagem:', error);
+          Alert.alert('Erro ao processar a imagem');
+        }
+      }
+    });
+  };
 
   const salvarPesquisa = () => {
     let valid = true;
@@ -41,7 +67,7 @@ export default function NovaPesquisa({ navigation }) {
       dataPesquisa: data,
       usuario: auth.currentUser?.email || 'desconhecido',
       criadaEm: new Date(),
-      imagemUrl: '' // deixamos esse campo pronto para uso futuro
+      imagemUrl: imagemBase64
     };
 
     const pesquisasCollection = collection(db, 'pesquisas');
@@ -86,8 +112,10 @@ export default function NovaPesquisa({ navigation }) {
       {erroData !== '' && <Text style={styles.erro}>{erroData}</Text>}
 
       <Text style={styles.label}>Imagem</Text>
-      <TouchableOpacity style={styles.boxImagem}>
-        <Text style={styles.textoImagem}>Câmera/Galeria de imagens (futuramente)</Text>
+      <TouchableOpacity style={styles.boxImagem} onPress={selecionarImagem}>
+        <Text style={styles.textoImagem}>
+          {imagemBase64 ? 'Imagem selecionada ✔' : 'Câmera/Galeria de imagens'}
+        </Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.botaoVerde} onPress={salvarPesquisa}>

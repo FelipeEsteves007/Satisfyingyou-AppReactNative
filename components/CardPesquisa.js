@@ -4,7 +4,14 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 export default function CardPesquisa({ imagem, nome, data, onPress }) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
-      <Image source={imagem} style={styles.icon} />
+      <Image
+        source={
+          imagem.startsWith('data:image')
+            ? { uri: imagem }
+            : require('../assets/emojis/pc.png')
+        }
+        style={styles.icon}
+      />
       <Text style={styles.titulo}>{nome}</Text>
       <Text style={styles.data}>{data}</Text>
     </TouchableOpacity>

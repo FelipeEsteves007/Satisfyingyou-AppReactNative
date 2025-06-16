@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  FlatList,
-} from 'react-native';
+import {View,TextInput,TouchableOpacity, Text,  StyleSheet,FlatList,} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CardPesquisa from '../components/CardPesquisa';
 import { db } from '../src/firebase/config';
@@ -16,7 +9,7 @@ export default function Home({ navigation }) {
   const [termo, setTermo] = useState('');
   const [pesquisas, setPesquisas] = useState([]);
 
-  // 🔄 Escuta em tempo real as pesquisas cadastradas
+  //Escuta em tempo real as pesquisas cadastradas
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'pesquisas'), (snapshot) => {
       const dados = snapshot.docs.map((doc) => ({
@@ -34,7 +27,7 @@ export default function Home({ navigation }) {
 
     return (
       <CardPesquisa
-        imagem={require('../assets/emojis/pc.png')} // ou use item.imagemUrl se tiver imagem personalizada
+        imagem={item.imagemUrl} // Agora vem do Firebase
         nome={item.titulo}
         data={item.dataPesquisa}
         onPress={() =>
@@ -42,15 +35,17 @@ export default function Home({ navigation }) {
             id: item.id,
             nome: item.titulo,
             data: item.dataPesquisa,
+            imagemUrl: item.imagemUrl
           })
         }
       />
+
     );
   };
 
   return (
     <View style={styles.container}>
-      {/* 🔍 Barra de busca */}
+      {/* Barra de busca */}
       <View style={styles.searchBar}>
         <Icon name="search" size={30} color="gray" />
         <TextInput
@@ -62,7 +57,7 @@ export default function Home({ navigation }) {
         />
       </View>
 
-      {/* 📋 Lista horizontal de pesquisas */}
+      {/* Lista horizontal de pesquisas */}
       <FlatList
         data={pesquisas}
         keyExtractor={(item) => item.id}
@@ -76,7 +71,7 @@ export default function Home({ navigation }) {
         }
       />
 
-      {/* ➕ Botão de nova pesquisa */}
+      {/* Botão de nova pesquisa */}
       <TouchableOpacity
         style={styles.novaPesquisaButton}
         onPress={() => navigation.navigate('NovaPesquisa')}
