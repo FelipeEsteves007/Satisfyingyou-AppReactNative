@@ -1,111 +1,58 @@
 import React from 'react';
-import {
-  SafeAreaView,
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import PieChart from 'react-native-pie-chart';
 
-export default function Relatorio({ navigation }) {
+export default function Relatorio() {
+  const largura = Dimensions.get('window').width * 0.6;
+
+  const series = [
+    { value: 5, color: '#00FF00' },
+    { value: 3, color: '#00CC66' },
+    { value: 2, color: '#FFD700' },
+    { value: 1, color: '#FF4500' },
+    { value: 4, color: '#FF0000' },
+  ];
+
+  const total = series.reduce((acc, s) => acc + s.value, 0);
+
+  const rotulos = ['Excelente', 'Bom', 'Neutro', 'Ruim', 'Péssimo'];
+
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header com seta e título */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.voltar}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.titulo}>Relatório</Text>
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.titulo}>Relatório de Satisfação</Text>
 
-      {/* Conteúdo: emoji + legenda */}
-      <View style={styles.content}>
-        <Image
-          source={require('../assets/emojis/grafico.png')}
-          style={styles.emoji}
-        />
+      <PieChart
+        widthAndHeight={largura}
+        series={series}
+        donut
+        coverRadius={0.45}
+        coverFill={'#402477'}
+      />
 
-        <View style={styles.legenda}>
-          <View style={styles.itemLegenda}>
-            <View style={[styles.cor, { backgroundColor: '#F4D35E' }]} />
-            <Text style={styles.textoLegenda}>Excelente</Text>
+      <View style={styles.legenda}>
+        {series.map((item, i) => (
+          <View key={i} style={styles.itemLegenda}>
+            <View style={[styles.cor, { backgroundColor: item.color }]} />
+            <Text style={styles.textoLegenda}>
+              {rotulos[i]} - {item.value} voto(s) ({((item.value / total) * 100).toFixed(1)}%)
+            </Text>
           </View>
-          <View style={styles.itemLegenda}>
-            <View style={[styles.cor, { backgroundColor: '#729FE1' }]} />
-            <Text style={styles.textoLegenda}>Bom</Text>
-          </View>
-          <View style={styles.itemLegenda}>
-            <View style={[styles.cor, { backgroundColor: '#60CFA1' }]} />
-            <Text style={styles.textoLegenda}>Neutro</Text>
-          </View>
-          <View style={styles.itemLegenda}>
-            <View style={[styles.cor, { backgroundColor: '#E3719C' }]} />
-            <Text style={styles.textoLegenda}>Ruim</Text>
-          </View>
-          <View style={styles.itemLegenda}>
-            <View style={[styles.cor, { backgroundColor: '#45D4D4' }]} />
-            <Text style={styles.textoLegenda}>Péssimo</Text>
-          </View>
-        </View>
+        ))}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#402477',
-  },
-  header: {
-    backgroundColor: '#2B1B6B',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 50,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  voltar: {
-    color: 'white',
-    fontSize: 30,
-    marginRight: 15,
-    fontFamily: 'AveriaLibre-Regular',
-  },
+  container: { flex: 1, backgroundColor: '#402477', alignItems: 'center', padding: 20 },
   titulo: {
+    fontSize: 20,
     color: 'white',
-    fontSize: 24,
     fontFamily: 'AveriaLibre-Regular',
+    marginVertical: 15,
   },
-  content: {
-    flexDirection: 'row',
-    flex: 1,
-    padding: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emoji: {
-    width: 180,
-    height: 180,
-    marginRight: 40,
-  },
-  legenda: {
-    justifyContent: 'center',
-  },
-  itemLegenda: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  cor: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    marginRight: 10,
-  },
-  textoLegenda: {
-    color: 'white',
-    fontSize: 16,
-    fontFamily: 'AveriaLibre-Regular',
-  },
+  legenda: { marginTop: 30, width: '100%' },
+  itemLegenda: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  cor: { width: 15, height: 15, borderRadius: 4, marginRight: 10 },
+  textoLegenda: { color: 'white', fontSize: 16, fontFamily: 'AveriaLibre-Regular' },
 });

@@ -1,31 +1,42 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Ícones do Google
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../src/firebase/config';
 
 export default function ColetarDados({ navigation }) {
-  const handleResposta = () => {
-    navigation.navigate('Agradecimento');
-  };
-
   const opcoes = [
-    { rotulo: 'Péssimo', icone: 'sentiment-very-dissatisfied', cor: '#FF0000' },
-    { rotulo: 'Ruim', icone: 'sentiment-dissatisfied', cor: '#FF4500' },
-    { rotulo: 'Neutro', icone: 'sentiment-neutral', cor: '#FFD700' },
-    { rotulo: 'Bom', icone: 'sentiment-satisfied', cor: '#00CC66' },
-    { rotulo: 'Excelente', icone: 'sentiment-very-satisfied', cor: '#00FF00' },
+    { rotulo: 'pessimo', icone: 'sentiment-very-dissatisfied', cor: '#FF0000' },
+    { rotulo: 'ruim', icone: 'sentiment-dissatisfied', cor: '#FF4500' },
+    { rotulo: 'neutro', icone: 'sentiment-neutral', cor: '#FFD700' },
+    { rotulo: 'bom', icone: 'sentiment-satisfied', cor: '#00CC66' },
+    { rotulo: 'excelente', icone: 'sentiment-very-satisfied', cor: '#00FF00' },
   ];
+
+  const enviarAvaliacao = async (avaliacao) => {
+    try {
+      await addDoc(collection(db, 'avaliacoes'), {
+        avaliacao: avaliacao,
+        criadaEm: new Date(),
+      });
+      navigation.navigate('Agradecimento');
+    } catch (error) {
+      console.log('Erro ao salvar avaliação:', error);
+      Alert.alert('Erro', 'Não foi possível registrar sua avaliação.');
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.pergunta}>O que você achou do Carnaval 2024?</Text>
+      <Text style={styles.pergunta}>O que você achou da pesquisa?</Text>
 
       <View style={styles.linhaEmojis}>
         {opcoes.map((opcao, index) => (
           <View style={styles.item} key={index}>
-            <TouchableOpacity onPress={handleResposta}>
+            <TouchableOpacity onPress={() => enviarAvaliacao(opcao.rotulo)}>
               <Icon name={opcao.icone} size={60} color={opcao.cor} />
             </TouchableOpacity>
-            <Text style={styles.rotulo}>{opcao.rotulo}</Text>
+            <Text style={styles.rotulo}>{opcao.rotulo.toUpperCase()}</Text>
           </View>
         ))}
       </View>
@@ -51,7 +62,6 @@ const styles = StyleSheet.create({
   linhaEmojis: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 5,
   },
   item: {
     alignItems: 'center',
