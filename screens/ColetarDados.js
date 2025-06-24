@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { collection, addDoc } from 'firebase/firestore';
-import { db } from '../src/firebase/config';
+import { useDispatch } from 'react-redux';
+import { adicionarAvaliacao } from '../src/Redux/AvaliacaoSlice';
 
 export default function ColetarDados({ navigation }) {
+  const dispatch = useDispatch();
+
   const opcoes = [
     { rotulo: 'pessimo', icone: 'sentiment-very-dissatisfied', cor: '#FF0000' },
     { rotulo: 'ruim', icone: 'sentiment-dissatisfied', cor: '#FF4500' },
@@ -13,31 +15,20 @@ export default function ColetarDados({ navigation }) {
     { rotulo: 'excelente', icone: 'sentiment-very-satisfied', cor: '#00FF00' },
   ];
 
-  const enviarAvaliacao = async (avaliacao) => {
-    try {
-      await addDoc(collection(db, 'avaliacoes'), {
-        avaliacao: avaliacao,
-        criadaEm: new Date(),
-      });
-      navigation.navigate('Agradecimento');
-    } catch (error) {
-      console.log('Erro ao salvar avaliação:', error);
-      Alert.alert('Erro', 'Não foi possível registrar sua avaliação.');
-    }
+  const enviar = (avaliacao) => {
+    dispatch(adicionarAvaliacao(avaliacao));
+    navigation.navigate('Agradecimento');
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.pergunta}>O que você achou da pesquisa?</Text>
-
-      <View style={styles.linhaEmojis}>
-        {opcoes.map((opcao, index) => (
-          <View style={styles.item} key={index}>
-            <TouchableOpacity onPress={() => enviarAvaliacao(opcao.rotulo)}>
-              <Icon name={opcao.icone} size={60} color={opcao.cor} />
-            </TouchableOpacity>
-            <Text style={styles.rotulo}>{opcao.rotulo.toUpperCase()}</Text>
-          </View>
+      <View style={styles.linha}>
+        {opcoes.map((opcao, i) => (
+          <TouchableOpacity key={i} onPress={() => enviar(opcao.rotulo)}>
+            <Icon name={opcao.icone} size={60} color={opcao.cor} />
+            <Text style={styles.label}>{opcao.rotulo.toUpperCase()}</Text>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
@@ -59,18 +50,15 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     textAlign: 'center',
   },
-  linhaEmojis: {
+  linha: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 10,
   },
-  item: {
-    alignItems: 'center',
-    marginHorizontal: 6,
-  },
-  rotulo: {
+  label: {
+    textAlign: 'center',
     color: 'white',
-    fontSize: 16,
-    fontFamily: 'AveriaLibre-Regular',
     marginTop: 6,
+    fontFamily: 'AveriaLibre-Regular',
   },
 });

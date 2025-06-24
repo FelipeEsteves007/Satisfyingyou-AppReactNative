@@ -1,58 +1,82 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import PieChart from 'react-native-pie-chart';
+import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { PieChart } from 'react-native-chart-kit';
+import { useSelector } from 'react-redux';
 
 export default function Relatorio() {
-  const largura = Dimensions.get('window').width * 0.6;
+  const votos = useSelector((state) => state.avaliacao.votos);
+  const largura = Dimensions.get('window').width - 40;
 
-  const series = [
-    { value: 5, color: '#00FF00' },
-    { value: 3, color: '#00CC66' },
-    { value: 2, color: '#FFD700' },
-    { value: 1, color: '#FF4500' },
-    { value: 4, color: '#FF0000' },
-  ];
+  const contagem = {
+    excelente: 0,
+    bom: 0,
+    neutro: 0,
+    ruim: 0,
+    pessimo: 0,
+  };
 
-  const total = series.reduce((acc, s) => acc + s.value, 0);
+  votos.forEach((v) => {
+    if (contagem[v.avaliacao] !== undefined) {
+      contagem[v.avaliacao]++;
+    }
+  });
 
+  const cores = ['#00FF00', '#00CC66', '#FFD700', '#FF4500', '#FF0000'];
+  const chaves = ['excelente', 'bom', 'neutro', 'ruim', 'pessimo'];
   const rotulos = ['Excelente', 'Bom', 'Neutro', 'Ruim', 'Péssimo'];
 
+  const dados = chaves.map((chave, i) => ({
+    name: rotulos[i],
+    population: contagem[chave],
+    color: cores[i],
+    legendFontColor: '#FFFFFF',
+    legendFontSize: 15,
+  })).filter((d) => d.population > 0);
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.titulo}>Relatório de Satisfação</Text>
 
-      <PieChart
-        widthAndHeight={largura}
-        series={series}
-        donut
-        coverRadius={0.45}
-        coverFill={'#402477'}
-      />
-
-      <View style={styles.legenda}>
-        {series.map((item, i) => (
-          <View key={i} style={styles.itemLegenda}>
-            <View style={[styles.cor, { backgroundColor: item.color }]} />
-            <Text style={styles.textoLegenda}>
-              {rotulos[i]} - {item.value} voto(s) ({((item.value / total) * 100).toFixed(1)}%)
-            </Text>
-          </View>
-        ))}
-      </View>
-    </View>
+      {dados.length > 0 ? (
+        <PieChart
+          data={dados}
+          width={largura}
+          height={220}
+          accessor={'population'}
+          backgroundColor={'transparent'}
+          paddingLeft={'15'}
+          chartConfig={{
+            color: () => `#FFF`,
+            labelColor: () => '#FFF',
+          }}
+          hasLegend={true}
+          center={[10, 0]}
+        />
+      ) : (
+        <Text style={styles.semDados}>Nenhuma avaliação registrada ainda.</Text>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#402477', alignItems: 'center', padding: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: '#402477',
+    padding: 20,
+  },
   titulo: {
     fontSize: 20,
     color: 'white',
     fontFamily: 'AveriaLibre-Regular',
+    textAlign: 'center',
     marginVertical: 15,
   },
-  legenda: { marginTop: 30, width: '100%' },
-  itemLegenda: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  cor: { width: 15, height: 15, borderRadius: 4, marginRight: 10 },
-  textoLegenda: { color: 'white', fontSize: 16, fontFamily: 'AveriaLibre-Regular' },
+  semDados: {
+    color: '#ccc',
+    fontSize: 16,
+    marginTop: 40,
+    fontFamily: 'AveriaLibre-Regular',
+    textAlign: 'center',
+  },
 });
