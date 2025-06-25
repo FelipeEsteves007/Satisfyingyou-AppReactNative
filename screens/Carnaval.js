@@ -4,7 +4,7 @@ import MCIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export default function Carnaval({ route, navigation }) {
-  const { id, nome, data } = route.params || {}; // dados da pesquisa selecionada
+  const { id, nome, data } = route.params || {}; 
 
   return (
     <View style={styles.container}>

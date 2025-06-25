@@ -22,7 +22,7 @@ export default function Login({ navigation }) {
     .then((userCredential) => {
       setErro('');
       console.log('Login efetuado:', JSON.stringify(userCredential));
-      navigation.navigate('Drawer', { email }); // Navega para o Drawer com o e-mail
+      navigation.navigate('Drawer', { email }); 
     })
     .catch((error) => {
       console.log('Erro no login:', error);

@@ -9,7 +9,6 @@ export default function Home({ navigation }) {
   const [termo, setTermo] = useState('');
   const [pesquisas, setPesquisas] = useState([]);
 
-  //Escuta em tempo real as pesquisas cadastradas
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'pesquisas'), (snapshot) => {
       const dados = snapshot.docs.map((doc) => ({
@@ -27,7 +26,7 @@ export default function Home({ navigation }) {
 
     return (
       <CardPesquisa
-        imagem={item.imagemUrl} // Agora vem do Firebase
+        imagem={item.imagemUrl} 
         nome={item.titulo}
         data={item.dataPesquisa}
         onPress={() =>

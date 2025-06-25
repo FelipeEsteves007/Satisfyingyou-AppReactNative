@@ -32,7 +32,7 @@ export default function NovaPesquisa({ navigation }) {
 
           const reader = new FileReader();
           reader.onloadend = () => {
-            setImagemBase64(reader.result); // ✅ Base64 salvo
+            setImagemBase64(reader.result);
           };
           reader.readAsDataURL(blob);
         } catch (error) {

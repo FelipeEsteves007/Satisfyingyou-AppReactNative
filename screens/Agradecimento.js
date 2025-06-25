@@ -5,7 +5,7 @@ export default function Agradecimento({ navigation }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.navigate('ColetarDados');
-    }, 3000); // 3 segundos
+    }, 3000); 
 
     return () => clearTimeout(timer);
   }, []);
